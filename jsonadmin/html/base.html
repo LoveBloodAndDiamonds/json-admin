@@ -11,6 +11,7 @@
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
         />
+        {% block head_extra %}{% endblock %}
         <style>
             :root {
                 --bg: #ffffff;
@@ -21,6 +22,11 @@
                 --border: #e5e5ea;
                 --success: #177245;
                 --error: #b42318;
+                --cm-key: #1f3c88;
+                --cm-string: #0b7f3f;
+                --cm-number: #8f3f00;
+                --cm-atom: #6b21a8;
+                --cm-comment: #6c6c70;
             }
             html[data-theme="dark"] {
                 --bg: #000000;
@@ -31,6 +37,11 @@
                 --border: #222226;
                 --success: #2fb170;
                 --error: #ff6b6b;
+                --cm-key: #8ab4ff;
+                --cm-string: #6ee7b7;
+                --cm-number: #fbbf24;
+                --cm-atom: #c4b5fd;
+                --cm-comment: #9a9aa0;
             }
             * {
                 box-sizing: border-box;
@@ -113,6 +124,42 @@
                 resize: vertical;
                 font: inherit;
             }
+            .CodeMirror {
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    13px/1.5 "JetBrains Mono",
+                    "SFMono-Regular",
+                    Menlo,
+                    monospace;
+            }
+            .CodeMirror-gutters {
+                background: var(--panel);
+                border-right: 1px solid var(--border);
+            }
+            .CodeMirror-linenumber {
+                color: var(--muted);
+            }
+            .cm-s-jsonadmin .cm-property {
+                color: var(--cm-key);
+            }
+            .cm-s-jsonadmin .cm-string {
+                color: var(--cm-string);
+            }
+            .cm-s-jsonadmin .cm-number {
+                color: var(--cm-number);
+            }
+            .cm-s-jsonadmin .cm-atom {
+                color: var(--cm-atom);
+            }
+            .cm-s-jsonadmin .cm-comment {
+                color: var(--cm-comment);
+            }
+            .cm-s-jsonadmin .CodeMirror-cursor {
+                border-left: 1px solid var(--text);
+            }
             input[type="password"] {
                 width: 100%;
                 border: 1px solid var(--border);
@@ -190,5 +237,6 @@
                 });
             })();
         </script>
+        {% block scripts %}{% endblock %}
     </body>
 </html>

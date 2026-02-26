@@ -1,4 +1,10 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% block head_extra %}
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
+    referrerpolicy="no-referrer"
+/>
+{% endblock %} {% block content %}
 <div class="top">
     <div class="title">{{ app_title }}</div>
     <div class="row">
@@ -11,15 +17,15 @@
 
 <div class="tabs">
     {% for tab in nav_pages %} {% if tab.active %}
-    <span>
-        {% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
-        }}
-    </span>
+    <span
+        >{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
+        }}</span
+    >
     {% else %}
-    <a href="{{ tab.href }}">
-        {% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
-        }}
-    </a>
+    <a href="{{ tab.href }}"
+        >{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
+        }}</a
+    >
     {% endif %} {% endfor %}
 </div>
 
@@ -31,7 +37,7 @@
     {% endif %}
 
     <form method="post" action="{{ save_action }}">
-        <textarea name="payload">{{ payload }}</textarea>
+        <textarea id="payload-editor" name="payload">{{ payload }}</textarea>
         <div class="row">
             <button type="submit">Save</button>
         </div>
@@ -41,4 +47,52 @@
     <pre>{{ schema_text }}</pre>
     {% endif %}
 </div>
+{% endblock %} {% block scripts %}
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script>
+    (() => {
+        const textarea = document.getElementById("payload-editor");
+        if (
+            !(textarea instanceof HTMLTextAreaElement) ||
+            typeof window.CodeMirror === "undefined"
+        ) {
+            return;
+        }
+
+        const editor = window.CodeMirror.fromTextArea(textarea, {
+            mode: { name: "javascript", json: true },
+            theme: "jsonadmin",
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 2,
+            tabSize: 2,
+            autofocus: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+        });
+        editor.setSize("100%", "520px");
+
+        const form = textarea.closest("form");
+        if (form instanceof HTMLFormElement) {
+            form.addEventListener("submit", () => {
+                textarea.value = editor.getValue();
+            });
+        }
+    })();
+</script>
 {% endblock %}
