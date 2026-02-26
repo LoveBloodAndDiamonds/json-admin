@@ -6,10 +6,13 @@
 
 from __future__ import annotations
 
+from html import escape
+
 from litestar import Litestar
 from pydantic import BaseModel, Field
 
 from jsonadmin import Admin, HtmlPage, JsonPage
+from jsonadmin.icons import FAIcon
 
 
 class AppSettings(BaseModel):
@@ -44,6 +47,39 @@ def build_welcome_block() -> str:
     """
 
 
+def build_icons_gallery_block() -> str:
+    """Возвращает HTML-блок с предпросмотром всех иконок из `FAIcon`.
+
+    Returns:
+        str: HTML-контент с сеткой иконок.
+
+    """
+    items_html: list[str] = []
+    for icon in FAIcon:
+        icon_name = escape(icon.name)
+        icon_value = escape(icon.value)
+        items_html.append(
+            f"""
+            <div style="border: 1px solid var(--border); border-radius: 8px; padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                <i class="{icon_value}" title="solid"></i>
+              </div>
+              <div style="font-size: 11px; color: var(--muted);">{icon_name}</div>
+              <code style="font-size: 11px;">{icon_value}</code>
+            </div>
+            """
+        )
+
+    grid = "".join(items_html)
+    return f"""
+    <h2 style="margin: 0 0 8px;">Галерея иконок Font Awesome</h2>
+    <p style="margin: 0 0 12px;">Всего иконок в enum: <b>{len(FAIcon)}</b></p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;">
+      {grid}
+    </div>
+    """
+
+
 APP_TITLE = "Json Admin Demo"
 ADMIN_PASSWORD = "admin"
 
@@ -59,13 +95,16 @@ admin = Admin(
         HtmlPage(
             slug="about",
             title="О проекте",
-            icon="fa-solid fa-circle-info",
             content=build_welcome_block,
+        ),
+        HtmlPage(
+            slug="icons",
+            title="Иконки",
+            content=build_icons_gallery_block,
         ),
         JsonPage(
             slug="settings",
             title="Настройки",
-            icon="fa-solid fa-gear",
             file_path="examples/data/app_settings.json",
             model=AppSettings,
             autocreate=True,
@@ -73,7 +112,6 @@ admin = Admin(
         JsonPage(
             slug="flags",
             title="Флаги",
-            icon="fa-solid fa-flag",
             file_path="examples/data/feature_flags.json",
             model=FeatureFlags,
             autocreate=True,
