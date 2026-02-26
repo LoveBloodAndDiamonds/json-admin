@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from litestar import Litestar
 from pydantic import BaseModel, Field
 
@@ -25,10 +27,8 @@ class FeatureFlags(BaseModel):
 app = Litestar(route_handlers=[])
 
 
-def func() -> str:
-    """Тестовая функция для index.html."""
-    import time
-
+def build_info_block() -> str:
+    """Формирует read-only HTML-блок для HtmlPage."""
     t = time.ctime()
     return f"""
     <h2>Welcome</h2>
@@ -48,7 +48,7 @@ admin = Admin(
             slug="info",
             title="Информация",
             icon="fa-solid fa-circle-info",
-            content=func,
+            content=build_info_block,
         ),
         JsonPage(
             slug="settings",

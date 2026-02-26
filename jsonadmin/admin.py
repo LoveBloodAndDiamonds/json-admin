@@ -212,7 +212,7 @@ class Admin:
 
             try:
                 saved_payload = page.validate_payload(raw_payload)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 schema_text = self._build_schema_text(page.model)
                 return self._editor_page(
                     page=page,
@@ -264,18 +264,16 @@ class Admin:
             list[dict[str, str | bool]]: Данные вкладок для шаблона.
 
         """
-        nav_pages: list[dict[str, str | bool]] = []
-        for nav_page in self._pages.values():
-            nav_pages.append(  # noqa
-                {
-                    "slug": nav_page.slug,
-                    "title": nav_page.title,
-                    "icon": nav_page.icon,
-                    "href": self._route(f"/page/{nav_page.slug}"),
-                    "active": nav_page.slug == active_slug,
-                }
-            )
-        return nav_pages
+        return [
+            {
+                "slug": nav_page.slug,
+                "title": nav_page.title,
+                "icon": nav_page.icon,
+                "href": self._route(f"/page/{nav_page.slug}"),
+                "active": nav_page.slug == active_slug,
+            }
+            for nav_page in self._pages.values()
+        ]
 
     async def _resolve_html_page_content(self, page: HtmlPage) -> str:
         """Получает HTML-контент для HtmlPage.
@@ -537,9 +535,9 @@ class Admin:
   <h1>{self._title}</h1>
   {error_html}
   <form method="post" action="{self._route("/login")}">
-    <label for="passwd">Password</label><br>
+    <label for="passwd">Пароль</label><br>
     <input id="passwd" name="passwd" type="password" required autofocus><br><br>
-    <button type="submit">Sign in</button>
+    <button type="submit">Войти</button>
   </form>
 </body>
 </html>
@@ -670,7 +668,7 @@ class Admin:
   {error_html}
   <div>{content_html}</div>
   <form method="post" action="{self._route("/logout")}">
-    <button type="submit">Out</button>
+    <button type="submit">Выход</button>
   </form>
 </body>
 </html>
