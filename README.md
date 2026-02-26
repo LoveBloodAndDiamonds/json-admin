@@ -38,12 +38,14 @@ admin = Admin(
             title="Настройки",
             file_path="data/app_settings.json",
             model=AppSettings,
+            icon="fa-solid fa-gear",
         ),
         JsonPage(
             slug="features",
             title="Флаги",
             file_path="data/feature_flags.json",
             model=FeatureFlags,
+            icon="fa-solid fa-flag",
         ),
     ],
     base_url="/",
@@ -56,3 +58,4 @@ admin = Admin(
 - кнопка `Сохранить` валидирует данные через обязательную Pydantic-модель и сохраняет JSON в файл.
 - `RootModel` is not supported: each page must declare an explicit `BaseModel` with fields.
 - можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
+- для вкладок можно передать `icon` с классом Font Awesome, например `fa-solid fa-gear`.

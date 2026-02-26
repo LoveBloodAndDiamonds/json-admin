@@ -270,6 +270,7 @@ class Admin:
                 {
                     "slug": nav_page.slug,
                     "title": nav_page.title,
+                    "icon": nav_page.icon,
                     "href": self._route(f"/page/{nav_page.slug}"),
                     "active": nav_page.slug == page.slug,
                 }
@@ -515,11 +516,12 @@ class Admin:
 
         nav_parts: list[str] = []
         for nav_page in self._pages.values():
+            icon_html = f'<i class="{nav_page.icon}"></i> ' if nav_page.icon else ""
             if nav_page.slug == page.slug:
-                nav_parts.append(f"<b>{nav_page.title}</b>")
+                nav_parts.append(f"<b>{icon_html}{nav_page.title}</b>")
             else:
                 nav_parts.append(
-                    f'<a href="{self._route(f"/page/{nav_page.slug}")}">{nav_page.title}</a>'
+                    f'<a href="{self._route(f"/page/{nav_page.slug}")}">{icon_html}{nav_page.title}</a>'
                 )
 
         nav_html = " | ".join(nav_parts)

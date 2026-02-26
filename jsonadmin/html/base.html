@@ -4,6 +4,13 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{{ page_title or app_title }}</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+            integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
         <style>
             :root {
                 --bg: #ffffff;
@@ -82,6 +89,9 @@
                 padding-bottom: 1px;
                 border-bottom: 1px solid transparent;
             }
+            .tabs i {
+                margin-right: 4px;
+            }
             .tabs span {
                 border-bottom-color: var(--accent);
                 font-weight: 600;
@@ -111,6 +121,16 @@
                 color: var(--text);
                 padding: 10px 12px;
                 font: inherit;
+                caret-color: var(--text);
+            }
+            input[type="password"]:-webkit-autofill,
+            input[type="password"]:-webkit-autofill:hover,
+            input[type="password"]:-webkit-autofill:focus,
+            input[type="password"]:-webkit-autofill:active {
+                -webkit-text-fill-color: var(--text);
+                -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+                box-shadow: 0 0 0 1000px var(--bg) inset;
+                caret-color: var(--text);
             }
             .row {
                 display: flex;

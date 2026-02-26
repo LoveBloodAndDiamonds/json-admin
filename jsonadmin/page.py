@@ -16,6 +16,7 @@ class JsonPage:
     Attributes:
         slug: Уникальный идентификатор страницы для URL.
         title: Заголовок вкладки в интерфейсе.
+        icon: CSS-класс иконки (например, `fa-solid fa-gear`).
         file_path: Абсолютный или относительный путь до JSON-файла.
         model: Обязательная Pydantic BaseModel для валидации.
 
@@ -25,6 +26,7 @@ class JsonPage:
     title: str
     file_path: str | Path
     model: type[BaseModel]
+    icon: str = ""
 
     def validate(self) -> None:
         """Проверяет корректность конфигурации страницы.
@@ -37,6 +39,8 @@ class JsonPage:
             raise ValueError("JsonPage: slug required")
         if not self.title:
             raise ValueError("JsonPage: title required")
+        if not isinstance(self.icon, str):
+            raise ValueError("JsonPage: icon must be string")
         if not str(self.file_path):
             raise ValueError("JsonPage: file_path required")
         if not isinstance(self.model, type) or not issubclass(self.model, BaseModel):
