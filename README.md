@@ -69,3 +69,19 @@ admin = Admin(
 - кнопка `Сохранить` валидирует данные через обязательную Pydantic-модель и сохраняет JSON в файл.
 - можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
 - для вкладок можно передать `icon` с классом Font Awesome, например `fa-solid fa-gear`.
+
+## Пример интерфейса
+
+Ниже — короткий визуальный пример того, как выглядит админка:
+
+- Страница входа:
+  ![Страница входа](examples/example_entry.jpeg)
+
+- Read-only HTML-вкладка (`HtmlPage`):
+  ![HTML-вкладка](examples/example_custom_html.jpeg)
+
+- Редактирование JSON (вкладка 1):
+  ![Редактирование JSON 1](examples/example_page_1.jpeg)
+
+- Редактирование JSON (вкладка 2):
+  ![Редактирование JSON 2](examples/example_page_2.jpeg)
