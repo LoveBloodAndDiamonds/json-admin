@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block content %}
+<div class="top">
+    <div class="title">{{ app_title }}</div>
+    <button type="button" data-action="toggle-theme">Theme</button>
+</div>
+
+<div class="panel" style="max-width: 480px; margin: 32px auto 0">
+    {% if error_text %}
+    <p class="msg-error">{{ error_text }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ login_action }}">
+        <label for="passwd">Password</label>
+        <input
+            id="passwd"
+            name="passwd"
+            type="password"
+            required
+            autofocus
+            style="margin-top: 6px"
+        />
+        <div class="row">
+            <button type="submit">Sign in</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

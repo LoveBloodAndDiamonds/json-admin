@@ -28,6 +28,8 @@ admin = Admin(
     app=app,
     passwd="admin",
     title="My App Admin",
+    index="index.html",
+    login="login.html",
     pages=[
         JsonPage(
             slug="settings",

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from litestar import Litestar, Request, Response, get, post
 from litestar.datastructures import Cookie
 from pydantic import BaseModel
@@ -23,6 +24,9 @@ class Admin:
         passwd: str,
         pages: list[JsonPage] | None = None,
         title: str = "JSON Admin",
+        templates_dir: str | Path | None = None,
+        index: str = "index.html",
+        login: str = "login.html",
         base_url: str = "/",
     ) -> None:
         """Инициализирует админ-панель и регистрирует маршруты.
@@ -32,6 +36,10 @@ class Admin:
             passwd: Пароль для входа в админку.
             pages: Список вкладок админки.
             title: Название приложения в интерфейсе админки.
+            templates_dir: Директория с пользовательскими HTML-шаблонами.
+                По умолчанию используется `jsonadmin/html`.
+            index: Имя шаблона страницы редактора.
+            login: Имя шаблона страницы входа.
             base_url: Базовый URL, на котором будет доступна админка.
 
         """
@@ -39,6 +47,13 @@ class Admin:
         self._passwd: str = passwd
         self._title: str = title
         self._base_url: str = self._normalize_base_url(base_url)
+        if templates_dir is None:
+            self._templates_dir = Path(__file__).resolve().parent / "html"
+        else:
+            self._templates_dir = Path(templates_dir)
+        self._index_template: str = index
+        self._login_template: str = login
+        self._template_env: Environment | None = self._init_template_env(self._templates_dir)
         self._cookie_name: str = "jsonadmin_session"
         self._pages: dict[str, JsonPage] = {}
         self._token_secret: str = hashlib.sha256(passwd.encode("utf-8")).hexdigest()
@@ -198,9 +213,104 @@ class Admin:
                 success_text="Изменения сохранены",
             )
 
-        # Регистрируем обработкичи в Litestart-приложении
+        # Регистрируем обработчики в Litestar-приложении.
         for handler in (index, login, logout, page_view, save_page):
             self._app.register(handler)
+
+    def _init_template_env(self, templates_dir: Path) -> Environment | None:
+        """Создает Jinja-окружение для HTML-шаблонов.
+
+        Args:
+            templates_dir: Директория с шаблонами.
+
+        Returns:
+            Environment | None: Настроенное окружение или `None`, если директории нет.
+
+        """
+        if not templates_dir.exists() or not templates_dir.is_dir():
+            return None
+
+        return Environment(
+            loader=FileSystemLoader(str(templates_dir)),
+            autoescape=select_autoescape(enabled_extensions=("html", "htm")),
+        )
+
+    def _render_editor_template(
+        self,
+        page: JsonPage,
+        json_text: str,
+        schema_text: str,
+        error_text: str,
+        success_text: str,
+    ) -> str | None:
+        """Рендерит пользовательский HTML-шаблон editor-страницы.
+
+        Args:
+            page: Активная страница.
+            json_text: Содержимое JSON в textarea.
+            schema_text: JSON-схема модели.
+            error_text: Сообщение об ошибке.
+            success_text: Сообщение об успехе.
+
+        Returns:
+            str | None: HTML-контент или `None`, если шаблоны недоступны.
+
+        """
+        if self._template_env is None:
+            return None
+
+        try:
+            template = self._template_env.get_template(self._index_template)
+        except TemplateNotFound:
+            return None
+
+        nav_pages: list[dict[str, str | bool]] = []
+        for nav_page in self._pages.values():
+            nav_pages.append(  # noqa
+                {
+                    "slug": nav_page.slug,
+                    "title": nav_page.title,
+                    "href": self._route(f"/page/{nav_page.slug}"),
+                    "active": nav_page.slug == page.slug,
+                }
+            )
+
+        return template.render(
+            app_title=self._title,
+            page_title=page.title,
+            nav_pages=nav_pages,
+            save_action=self._route(f"/page/{page.slug}"),
+            logout_action=self._route("/logout"),
+            payload=json_text,
+            schema_text=schema_text,
+            error_text=error_text,
+            success_text=success_text,
+        )
+
+    def _render_login_template(self, error_text: str) -> str | None:
+        """Рендерит пользовательский HTML-шаблон страницы входа.
+
+        Args:
+            error_text: Сообщение об ошибке входа.
+
+        Returns:
+            str | None: HTML-контент или `None`, если шаблоны недоступны.
+
+        """
+        if self._template_env is None:
+            return None
+
+        try:
+            template = self._template_env.get_template(self._login_template)
+        except TemplateNotFound:
+            return None
+
+        return template.render(
+            app_title=self._title,
+            page_title="Login",
+            login_action=self._route("/login"),
+            error_text=error_text,
+        )
 
     def _normalize_base_url(self, base_url: str) -> str:
         """Нормализует базовый URL для стабильного роутинга.
@@ -350,6 +460,10 @@ class Admin:
             Response[str]: HTML-ответ.
 
         """
+        rendered_html = self._render_login_template(error_text=error_text)
+        if rendered_html is not None:
+            return self._html_response(rendered_html)
+
         error_html = f"<p>{error_text}</p>" if error_text else ""
         html = f"""
 <!doctype html>
@@ -359,9 +473,9 @@ class Admin:
   <h1>{self._title}</h1>
   {error_html}
   <form method="post" action="{self._route("/login")}">
-    <label for="passwd">Пароль</label><br>
+    <label for="passwd">Password</label><br>
     <input id="passwd" name="passwd" type="password" required autofocus><br><br>
-    <button type="submit">Войти</button>
+    <button type="submit">Sign in</button>
   </form>
 </body>
 </html>
@@ -389,6 +503,16 @@ class Admin:
             Response[str]: HTML-ответ страницы.
 
         """
+        rendered_html = self._render_editor_template(
+            page=page,
+            json_text=json_text,
+            schema_text=schema_text,
+            error_text=error_text,
+            success_text=success_text,
+        )
+        if rendered_html is not None:
+            return self._html_response(rendered_html)
+
         nav_parts: list[str] = []
         for nav_page in self._pages.values():
             if nav_page.slug == page.slug:

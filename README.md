@@ -30,6 +30,8 @@ admin = Admin(
     app=app,
     passwd="super-strong-password",
     title="My App Admin",
+    index="index.html",
+    login="login.html",
     pages=[
         JsonPage(
             slug="settings",
@@ -53,3 +55,4 @@ admin = Admin(
 - после входа доступны вкладки-страницы с JSON-редактором.
 - кнопка `Сохранить` валидирует данные через обязательную Pydantic-модель и сохраняет JSON в файл.
 - `RootModel` is not supported: each page must declare an explicit `BaseModel` with fields.
+- можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
