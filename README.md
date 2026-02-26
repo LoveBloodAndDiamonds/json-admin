@@ -2,6 +2,20 @@
 
 Библиотека с реализацией простого интерфейса для управления .json-файлом с настройками приложения.
 
+## Установка
+
+```bash
+uv add json-admin
+```
+
+```bash
+poetry add json-admin
+```
+
+```bash
+pip install json-admin
+```
+
 ## Быстрый старт
 
 ```python
