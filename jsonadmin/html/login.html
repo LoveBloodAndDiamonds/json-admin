@@ -1,7 +1,14 @@
 {% extends "base.html" %} {% block content %}
 <div class="top">
     <div class="title">{{ app_title }}</div>
-    <button type="button" data-action="toggle-theme">Theme</button>
+    <button
+        type="button"
+        data-action="toggle-theme"
+        aria-label="Сменить тему"
+        title="Сменить тему"
+    >
+        <i class="fa-solid fa-sun"></i>
+    </button>
 </div>
 
 <div class="panel" style="max-width: 480px; margin: 32px auto 0">
@@ -10,17 +17,19 @@
     {% endif %}
 
     <form method="post" action="{{ login_action }}">
-        <label for="passwd">Password</label>
-        <input
-            id="passwd"
-            name="passwd"
-            type="password"
-            required
-            autofocus
-            style="margin-top: 6px"
-        />
-        <div class="row">
-            <button type="submit">Sign in</button>
+        <div class="row" style="margin-top: 0">
+            <input
+                id="passwd"
+                name="passwd"
+                type="password"
+                required
+                autofocus
+                aria-label="Пароль"
+                placeholder="Пароль"
+            />
+            <button type="submit" aria-label="Войти" title="Войти">
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </button>
         </div>
     </form>
 </div>

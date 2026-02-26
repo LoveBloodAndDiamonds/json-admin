@@ -8,9 +8,18 @@
 <div class="top">
     <div class="title">{{ app_title }}</div>
     <div class="row">
-        <button type="button" data-action="toggle-theme">Theme</button>
+        <button
+            type="button"
+            data-action="toggle-theme"
+            aria-label="Сменить тему"
+            title="Сменить тему"
+        >
+            <i class="fa-solid fa-sun"></i>
+        </button>
         <form method="post" action="{{ logout_action }}">
-            <button type="submit">Out</button>
+            <button type="submit" aria-label="Выход" title="Выход">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
         </form>
     </div>
 </div>

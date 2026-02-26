@@ -80,6 +80,9 @@
                 cursor: pointer;
                 font: inherit;
             }
+            button i {
+                margin-right: 0;
+            }
             button:focus-visible,
             textarea:focus-visible,
             input:focus-visible,
@@ -230,7 +233,10 @@
                     if (!(target instanceof HTMLElement)) {
                         return;
                     }
-                    if (target.dataset.action !== "toggle-theme") {
+                    const toggleButton = target.closest(
+                        '[data-action="toggle-theme"]',
+                    );
+                    if (!(toggleButton instanceof HTMLElement)) {
                         return;
                     }
 
