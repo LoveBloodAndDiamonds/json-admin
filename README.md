@@ -62,6 +62,7 @@ admin = Admin(
             file_path="data/app_settings.json",
             model=AppSettings,
             icon="fa-solid fa-gear",
+            autocreate=True,
         ),
         JsonPage(
             slug="features",
@@ -69,6 +70,7 @@ admin = Admin(
             file_path="data/feature_flags.json",
             model=FeatureFlags,
             icon="fa-solid fa-flag",
+            autocreate=True,
         ),
     ],
     base_url="/",
@@ -81,6 +83,8 @@ admin = Admin(
 - `HtmlPage` — read-only вкладка с HTML-блоком. `content` может быть:
   встроенной строкой HTML, путём к `.html` файлу или `Callable[[], str]`.
 - кнопка `Сохранить` валидирует данные через обязательную Pydantic-модель и сохраняет JSON в файл.
+- `autocreate=True` создаст JSON-файл при старте, если файла нет.
+- файл создается только если модель может быть построена из дефолтных значений; иначе будет ошибка.
 - можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
 - для вкладок можно передать `icon` с классом Font Awesome, например `fa-solid fa-gear`.
 

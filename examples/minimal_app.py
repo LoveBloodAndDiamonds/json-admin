@@ -68,6 +68,7 @@ admin = Admin(
             icon="fa-solid fa-gear",
             file_path="examples/data/app_settings.json",
             model=AppSettings,
+            autocreate=True,
         ),
         JsonPage(
             slug="flags",
@@ -75,6 +76,7 @@ admin = Admin(
             icon="fa-solid fa-flag",
             file_path="examples/data/feature_flags.json",
             model=FeatureFlags,
+            autocreate=True,
         ),
     ],
     base_url="/",
