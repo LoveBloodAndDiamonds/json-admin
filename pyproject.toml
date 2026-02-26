@@ -4,7 +4,7 @@ name = "json-admin"
 # •	PATCH (x.y.Z) → увеличивается при багфиксе, который не ломает совместимость.
 # •	MINOR (x.Y.z) → увеличивается при добавлении новой функциональности, но без ломающих изменений (backward-compatible).
 # •	MAJOR (X.y.z) → увеличивается при изменениях, которые ломают обратную совместимость.
-version = "0.1.0"
+version = "1.0.0"
 
 description = "Simple web admin interface to manage .json file"
 readme = "README.md"
