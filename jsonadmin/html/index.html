@@ -34,8 +34,7 @@
     <p class="msg-error">{{ error_text }}</p>
     {% endif %} {% if success_text %}
     <p class="msg-success">{{ success_text }}</p>
-    {% endif %}
-
+    {% endif %} {% if content_html %} {{ content_html | safe }} {% else %}
     <form method="post" action="{{ save_action }}">
         <textarea id="payload-editor" name="payload">{{ payload }}</textarea>
         <div class="row">
@@ -45,7 +44,7 @@
 
     {% if schema_text %}
     <pre>{{ schema_text }}</pre>
-    {% endif %}
+    {% endif %} {% endif %}
 </div>
 {% endblock %} {% block scripts %}
 <script

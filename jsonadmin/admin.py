@@ -12,7 +12,7 @@ from litestar import Litestar, Request, Response, get, post
 from litestar.datastructures import Cookie
 from pydantic import BaseModel
 
-from jsonadmin.page import JsonPage
+from jsonadmin.pages import BasePage, HtmlPage, JsonPage
 
 
 class Admin:
@@ -22,7 +22,7 @@ class Admin:
         self,
         app: Litestar,
         passwd: str,
-        pages: list[JsonPage] | None = None,
+        pages: list[BasePage] | None = None,
         title: str = "JSON Admin",
         templates_dir: str | Path | None = None,
         index: str = "index.html",
@@ -36,8 +36,7 @@ class Admin:
             passwd: Пароль для входа в админку.
             pages: Список вкладок админки.
             title: Название приложения в интерфейсе админки.
-            templates_dir: Директория с пользовательскими HTML-шаблонами.
-                По умолчанию используется `jsonadmin/html`.
+            templates_dir: Директория с пользовательскими HTML-шаблонами. По умолчанию используется `jsonadmin/html`.
             index: Имя шаблона страницы редактора.
             login: Имя шаблона страницы входа.
             base_url: Базовый URL, на котором будет доступна админка.
@@ -55,14 +54,14 @@ class Admin:
         self._login_template: str = login
         self._template_env: Environment | None = self._init_template_env(self._templates_dir)
         self._cookie_name: str = "jsonadmin_session"
-        self._pages: dict[str, JsonPage] = {}
+        self._pages: dict[str, BasePage] = {}
         self._token_secret: str = hashlib.sha256(passwd.encode("utf-8")).hexdigest()
         self._register_routes()
 
         for page in pages or []:
             self.add_page(page)
 
-    def add_page(self, page: JsonPage) -> None:
+    def add_page(self, page: BasePage) -> None:
         """Регистрирует новую вкладку админки.
 
         Args:
@@ -72,7 +71,6 @@ class Admin:
             ValueError: Если slug уже занят.
 
         """
-        page.validate()
         if page.slug in self._pages:
             raise ValueError(f"Page with slug='{page.slug}' is already registered")
         self._pages[page.slug] = page
@@ -151,6 +149,14 @@ class Admin:
             if page is None:
                 return self._html_response("<h1>404</h1><p>Page not found</p>", status_code=404)
 
+            if isinstance(page, HtmlPage):
+                html_content = await self._resolve_html_page_content(page)
+                return self._html_page(page=page, content_html=html_content, error_text="")
+            if not isinstance(page, JsonPage):
+                return self._html_response(
+                    "<h1>500</h1><p>Unsupported page type</p>", status_code=500
+                )
+
             payload, load_error = await self._read_json_payload(page.path)
             pretty_json = json.dumps(payload, ensure_ascii=False, indent=2)
             schema_text = self._build_schema_text(page.model)
@@ -176,6 +182,19 @@ class Admin:
             page = self._pages.get(slug)
             if page is None:
                 return self._html_response("<h1>404</h1><p>Page not found</p>", status_code=404)
+
+            if isinstance(page, HtmlPage):
+                html_content = await self._resolve_html_page_content(page)
+                return self._html_page(
+                    page=page,
+                    content_html=html_content,
+                    error_text="HtmlPage is read-only.",
+                    status_code=405,
+                )
+            if not isinstance(page, JsonPage):
+                return self._html_response(
+                    "<h1>500</h1><p>Unsupported page type</p>", status_code=500
+                )
 
             form = await request.form()
             json_text = str(form.get("payload", ""))
@@ -235,13 +254,66 @@ class Admin:
             autoescape=select_autoescape(enabled_extensions=("html", "htm")),
         )
 
+    def _build_nav_pages(self, active_slug: str) -> list[dict[str, str | bool]]:
+        """Собирает список вкладок для навигации.
+
+        Args:
+            active_slug: Slug текущей активной страницы.
+
+        Returns:
+            list[dict[str, str | bool]]: Данные вкладок для шаблона.
+
+        """
+        nav_pages: list[dict[str, str | bool]] = []
+        for nav_page in self._pages.values():
+            nav_pages.append(  # noqa
+                {
+                    "slug": nav_page.slug,
+                    "title": nav_page.title,
+                    "icon": nav_page.icon,
+                    "href": self._route(f"/page/{nav_page.slug}"),
+                    "active": nav_page.slug == active_slug,
+                }
+            )
+        return nav_pages
+
+    async def _resolve_html_page_content(self, page: HtmlPage) -> str:
+        """Получает HTML-контент для HtmlPage.
+
+        Args:
+            page: Конфигурация HTML-вкладки.
+
+        Returns:
+            str: Готовый HTML-блок.
+
+        """
+        content = page.content
+        if callable(content):
+
+            def _call() -> str:
+                return content()
+
+            rendered = await asyncio.to_thread(_call)
+            return str(rendered)
+
+        if isinstance(content, Path):
+            return await asyncio.to_thread(content.read_text, "utf-8")
+
+        possible_path = Path(content)
+        if possible_path.suffix.lower() in {".html", ".htm"} and possible_path.exists():
+            return await asyncio.to_thread(possible_path.read_text, "utf-8")
+
+        return content
+
     def _render_editor_template(
         self,
-        page: JsonPage,
+        page: BasePage,
         json_text: str,
         schema_text: str,
         error_text: str,
         success_text: str,
+        content_html: str = "",
+        save_action: str = "",
     ) -> str | None:
         """Рендерит пользовательский HTML-шаблон editor-страницы.
 
@@ -251,6 +323,8 @@ class Admin:
             schema_text: JSON-схема модели.
             error_text: Сообщение об ошибке.
             success_text: Сообщение об успехе.
+            content_html: Контент HtmlPage для встраивания в основной блок.
+            save_action: URL для сохранения JsonPage.
 
         Returns:
             str | None: HTML-контент или `None`, если шаблоны недоступны.
@@ -264,28 +338,17 @@ class Admin:
         except TemplateNotFound:
             return None
 
-        nav_pages: list[dict[str, str | bool]] = []
-        for nav_page in self._pages.values():
-            nav_pages.append(  # noqa
-                {
-                    "slug": nav_page.slug,
-                    "title": nav_page.title,
-                    "icon": nav_page.icon,
-                    "href": self._route(f"/page/{nav_page.slug}"),
-                    "active": nav_page.slug == page.slug,
-                }
-            )
-
         return template.render(
             app_title=self._title,
             page_title=page.title,
-            nav_pages=nav_pages,
-            save_action=self._route(f"/page/{page.slug}"),
+            nav_pages=self._build_nav_pages(active_slug=page.slug),
+            save_action=save_action,
             logout_action=self._route("/logout"),
             payload=json_text,
             schema_text=schema_text,
             error_text=error_text,
             success_text=success_text,
+            content_html=content_html,
         )
 
     def _render_login_template(self, error_text: str) -> str | None:
@@ -510,6 +573,7 @@ class Admin:
             schema_text=schema_text,
             error_text=error_text,
             success_text=success_text,
+            save_action=self._route(f"/page/{page.slug}"),
         )
         if rendered_html is not None:
             return self._html_response(rendered_html)
@@ -551,6 +615,67 @@ class Admin:
 </html>
 """
         return self._html_response(html)
+
+    def _html_page(
+        self,
+        page: HtmlPage,
+        content_html: str,
+        error_text: str,
+        status_code: int = 200,
+    ) -> Response[str]:
+        """Строит read-only страницу HtmlPage.
+
+        Args:
+            page: Активная HTML-вкладка.
+            content_html: HTML-блок страницы.
+            error_text: Сообщение об ошибке.
+            status_code: HTTP-статус ответа.
+
+        Returns:
+            Response[str]: HTML-ответ страницы.
+
+        """
+        rendered_html = self._render_editor_template(
+            page=page,
+            json_text="",
+            schema_text="",
+            error_text=error_text,
+            success_text="",
+            content_html=content_html,
+            save_action="",
+        )
+        if rendered_html is not None:
+            return self._html_response(rendered_html, status_code=status_code)
+
+        nav_parts: list[str] = []
+        for nav_page in self._pages.values():
+            icon_html = f'<i class="{nav_page.icon}"></i> ' if nav_page.icon else ""
+            if nav_page.slug == page.slug:
+                nav_parts.append(f"<b>{icon_html}{nav_page.title}</b>")
+            else:
+                nav_parts.append(
+                    f'<a href="{self._route(f"/page/{nav_page.slug}")}">{icon_html}{nav_page.title}</a>'
+                )
+
+        nav_html = " | ".join(nav_parts)
+        error_html = f"<p>{error_text}</p>" if error_text else ""
+
+        html = f"""
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>{page.title}</title></head>
+<body>
+  <h1>{self._title}</h1>
+  <p>{nav_html}</p>
+  {error_html}
+  <div>{content_html}</div>
+  <form method="post" action="{self._route("/logout")}">
+    <button type="submit">Out</button>
+  </form>
+</body>
+</html>
+"""
+        return self._html_response(html, status_code=status_code)
 
     def _html_response(self, content: str, status_code: int = 200) -> Response[str]:
         """Создает HTML-ответ с едиными заголовками.

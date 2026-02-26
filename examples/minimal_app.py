@@ -5,7 +5,7 @@ from __future__ import annotations
 from litestar import Litestar
 from pydantic import BaseModel, Field
 
-from jsonadmin import Admin, JsonPage
+from jsonadmin import Admin, HtmlPage, JsonPage
 
 
 class AppSettings(BaseModel):
@@ -24,6 +24,19 @@ class FeatureFlags(BaseModel):
 
 app = Litestar(route_handlers=[])
 
+
+def func() -> str:
+    """Тестовая функция для index.html."""
+    import time
+
+    t = time.ctime()
+    return f"""
+    <h2>Welcome</h2>
+    {t}
+    <p>This page is read-only and renders embedded HTML block.</p>
+    """
+
+
 admin = Admin(
     app=app,
     passwd="admin",
@@ -31,6 +44,12 @@ admin = Admin(
     index="index.html",
     login="login.html",
     pages=[
+        HtmlPage(
+            slug="info",
+            title="Информация",
+            icon="fa-solid fa-circle-info",
+            content=func,
+        ),
         JsonPage(
             slug="settings",
             title="Настройки",
