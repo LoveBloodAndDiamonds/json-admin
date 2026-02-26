@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{ page_title or app_title }}</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+            integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        {% block head_extra %}{% endblock %}
+        <style>
+            :root {
+                --bg: #ffffff;
+                --panel: #f7f7f8;
+                --text: #1a1a1b;
+                --muted: #6c6c70;
+                --accent: #007aff;
+                --border: #e5e5ea;
+                --success: #177245;
+                --error: #b42318;
+                --cm-key: #1f3c88;
+                --cm-string: #0b7f3f;
+                --cm-number: #8f3f00;
+                --cm-atom: #6b21a8;
+                --cm-comment: #6c6c70;
+            }
+            html[data-theme="dark"] {
+                --bg: #000000;
+                --panel: #111113;
+                --text: #e1e1e1;
+                --muted: #9a9aa0;
+                --accent: #0a84ff;
+                --border: #222226;
+                --success: #2fb170;
+                --error: #ff6b6b;
+                --cm-key: #8ab4ff;
+                --cm-string: #6ee7b7;
+                --cm-number: #fbbf24;
+                --cm-atom: #c4b5fd;
+                --cm-comment: #9a9aa0;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    13px/1.5 "JetBrains Mono",
+                    "SFMono-Regular",
+                    Menlo,
+                    monospace;
+            }
+            .wrap {
+                max-width: 920px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+            .title {
+                font-size: 15px;
+                font-weight: 600;
+            }
+            button {
+                border: 1px solid var(--border);
+                background: transparent;
+                color: var(--text);
+                padding: 6px 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                font: inherit;
+            }
+            button:focus-visible,
+            textarea:focus-visible,
+            input:focus-visible,
+            a:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: 2px;
+            }
+            .tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 12px;
+                flex-wrap: wrap;
+            }
+            .tabs a,
+            .tabs span {
+                color: var(--text);
+                text-decoration: none;
+                padding-bottom: 1px;
+                border-bottom: 1px solid transparent;
+            }
+            .tabs i {
+                margin-right: 4px;
+            }
+            .tabs span {
+                border-bottom-color: var(--text);
+                font-weight: 600;
+            }
+            .panel {
+                border: 1px solid var(--border);
+                background: var(--panel);
+                border-radius: 10px;
+                padding: 12px;
+            }
+            textarea {
+                width: 100%;
+                min-height: 420px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--bg);
+                color: var(--text);
+                padding: 12px;
+                resize: vertical;
+                font: inherit;
+            }
+            .CodeMirror {
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    13px/1.5 "JetBrains Mono",
+                    "SFMono-Regular",
+                    Menlo,
+                    monospace;
+            }
+            .CodeMirror-gutters {
+                background: var(--panel);
+                border-right: 1px solid var(--border);
+            }
+            .CodeMirror-linenumber {
+                color: var(--muted);
+            }
+            .cm-s-jsonadmin .cm-property {
+                color: var(--cm-key);
+            }
+            .cm-s-jsonadmin .cm-string {
+                color: var(--cm-string);
+            }
+            .cm-s-jsonadmin .cm-number {
+                color: var(--cm-number);
+            }
+            .cm-s-jsonadmin .cm-atom {
+                color: var(--cm-atom);
+            }
+            .cm-s-jsonadmin .cm-comment {
+                color: var(--cm-comment);
+            }
+            .cm-s-jsonadmin .CodeMirror-cursor {
+                border-left: 1px solid var(--text);
+            }
+            .cm-error-line {
+                background: rgba(255, 90, 90, 0.14);
+            }
+            .cm-error-token {
+                background: rgba(255, 90, 90, 0.32);
+                border-radius: 2px;
+            }
+            input[type="password"] {
+                width: 100%;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--bg);
+                color: var(--text);
+                padding: 10px 12px;
+                font: inherit;
+                caret-color: var(--text);
+            }
+            input[type="password"]:-webkit-autofill,
+            input[type="password"]:-webkit-autofill:hover,
+            input[type="password"]:-webkit-autofill:focus,
+            input[type="password"]:-webkit-autofill:active {
+                -webkit-text-fill-color: var(--text);
+                -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+                box-shadow: 0 0 0 1000px var(--bg) inset;
+                caret-color: var(--text);
+            }
+            .row {
+                display: flex;
+                gap: 8px;
+                margin-top: 10px;
+                align-items: center;
+            }
+            .msg-error {
+                color: var(--error);
+                margin: 0 0 10px;
+            }
+            .msg-success {
+                color: var(--success);
+                margin: 0 0 10px;
+            }
+            pre {
+                margin: 12px 0 0;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 12px;
+                overflow: auto;
+                background: var(--bg);
+                color: var(--muted);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">{% block content %}{% endblock %}</div>
+        <script>
+            (() => {
+                const storageKey = "jsonadmin-theme";
+                const root = document.documentElement;
+                const savedTheme = localStorage.getItem(storageKey);
+                const systemDark = window.matchMedia(
+                    "(prefers-color-scheme: dark)",
+                ).matches;
+                const initialTheme =
+                    savedTheme || (systemDark ? "dark" : "light");
+                root.setAttribute("data-theme", initialTheme);
+
+                document.addEventListener("click", (event) => {
+                    const target = event.target;
+                    if (!(target instanceof HTMLElement)) {
+                        return;
+                    }
+                    if (target.dataset.action !== "toggle-theme") {
+                        return;
+                    }
+
+                    const current =
+                        root.getAttribute("data-theme") === "dark"
+                            ? "dark"
+                            : "light";
+                    const next = current === "dark" ? "light" : "dark";
+                    root.setAttribute("data-theme", next);
+                    localStorage.setItem(storageKey, next);
+                });
+            })();
+        </script>
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

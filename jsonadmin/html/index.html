@@ -1,0 +1,114 @@
+{% extends "base.html" %} {% block head_extra %}
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
+    referrerpolicy="no-referrer"
+/>
+{% endblock %} {% block content %}
+<div class="top">
+    <div class="title">{{ app_title }}</div>
+    <div class="row">
+        <button type="button" data-action="toggle-theme">Theme</button>
+        <form method="post" action="{{ logout_action }}">
+            <button type="submit">Out</button>
+        </form>
+    </div>
+</div>
+
+<div class="tabs">
+    {% for tab in nav_pages %} {% if tab.active %}
+    <span
+        >{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
+        }}</span
+    >
+    {% else %}
+    <a href="{{ tab.href }}"
+        >{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title
+        }}</a
+    >
+    {% endif %} {% endfor %}
+</div>
+
+<div class="panel">
+    {% if error_text %}
+    <p class="msg-error">{{ error_text }}</p>
+    {% endif %} {% if success_text %}
+    <p class="msg-success">{{ success_text }}</p>
+    {% endif %} {% if content_html %} {{ content_html | safe }} {% else %}
+    <form method="post" action="{{ save_action }}">
+        <textarea id="payload-editor" name="payload">{{ payload }}</textarea>
+        <div class="row">
+            <button type="submit">Save</button>
+        </div>
+    </form>
+
+    {% if schema_text %}
+    <pre>{{ schema_text }}</pre>
+    {% endif %} {% endif %}
+</div>
+{% endblock %} {% block scripts %}
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"
+    referrerpolicy="no-referrer"
+></script>
+<script>
+    (() => {
+        const textarea = document.getElementById("payload-editor");
+        if (
+            !(textarea instanceof HTMLTextAreaElement) ||
+            typeof window.CodeMirror === "undefined"
+        ) {
+            return;
+        }
+
+        const editor = window.CodeMirror.fromTextArea(textarea, {
+            mode: { name: "javascript", json: true },
+            theme: "jsonadmin",
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 2,
+            tabSize: 2,
+            autofocus: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+        });
+        editor.setSize("100%", "520px");
+
+        const errorText =
+            document.querySelector(".msg-error")?.textContent?.trim() || "";
+        const match = errorText.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+        if (match) {
+            const line = Math.max(Number(match[1]) - 1, 0);
+            const col = Math.max(Number(match[2]) - 1, 0);
+
+            editor.addLineClass(line, "background", "cm-error-line");
+            editor.markText(
+                { line, ch: col },
+                { line, ch: col + 1 },
+                { className: "cm-error-token" },
+            );
+            editor.scrollIntoView({ line, ch: col }, 120);
+            editor.setCursor({ line, ch: col });
+        }
+
+        const form = textarea.closest("form");
+        if (form instanceof HTMLFormElement) {
+            form.addEventListener("submit", () => {
+                textarea.value = editor.getValue();
+            });
+        }
+    })();
+</script>
+{% endblock %}
