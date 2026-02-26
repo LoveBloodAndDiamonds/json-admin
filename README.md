@@ -19,7 +19,7 @@ class AppSettings(BaseModel):
 
 
 class FeatureFlags(BaseModel):
-    """Настройки feature flags."""
+    """Настройки флагов."""
 
     use_cache: bool = Field(default=True, description="Включает кеширование")
     beta_mode: bool = Field(default=False, description="Включает beta-режим")
@@ -39,7 +39,7 @@ admin = Admin(
             icon="fa-solid fa-circle-info",
             content="""
             <h2>Welcome</h2>
-            <p>This page is read-only and renders embedded HTML block.</p>
+            <p>Эта вкладка только для чтения и показывает HTML-блок.</p>
             """,
         ),
         JsonPage(
@@ -65,9 +65,7 @@ admin = Admin(
 - `GET /` покажет форму входа по паролю.
 - после входа доступны вкладки-страницы с JSON-редактором.
 - `HtmlPage` — read-only вкладка с HTML-блоком. `content` может быть:
-  - встроенной строкой HTML,
-  - путём к `.html` файлу,
-  - `Callable[[], str]`.
+  встроенной строкой HTML, путём к `.html` файлу или `Callable[[], str]`.
 - кнопка `Сохранить` валидирует данные через обязательную Pydantic-модель и сохраняет JSON в файл.
 - можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
 - для вкладок можно передать `icon` с классом Font Awesome, например `fa-solid fa-gear`.
