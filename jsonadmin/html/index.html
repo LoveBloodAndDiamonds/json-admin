@@ -31,9 +31,9 @@
 <div class="tabs">
   {% for tab in nav_pages %}
     {% if tab.active %}
-      <span>{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title }}</span>
+      <span>{% if tab.icon %}<i class="{{ tab.icon }}"></i>{% endif %}{{ tab.title }}</span>
     {% else %}
-      <a href="{{ tab.href }}">{% if tab.icon %}<i class="{{ tab.icon }}"></i> {% endif %}{{ tab.title }}</a>
+      <a href="{{ tab.href }}">{% if tab.icon %}<i class="{{ tab.icon }}"></i>{% endif %}{{ tab.title }}</a>
     {% endif %}
   {% endfor %}
 </div>

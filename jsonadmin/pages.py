@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .icons import FAIcon
+
 
 class BasePage(BaseModel):
     """Общая модель страницы админки.
@@ -13,7 +15,7 @@ class BasePage(BaseModel):
     Attributes:
         slug: Уникальный идентификатор страницы для URL.
         title: Заголовок вкладки в интерфейсе.
-        icon: CSS-класс иконки (например, `fa-solid fa-gear`).
+        icon: CSS-класс иконки.
 
     """
 
@@ -21,7 +23,7 @@ class BasePage(BaseModel):
 
     slug: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    icon: str = ""
+    icon: FAIcon = FAIcon.FAR_FILE
 
 
 class JsonPage(BasePage):
@@ -30,12 +32,14 @@ class JsonPage(BasePage):
     Attributes:
         file_path: Путь до JSON-файла.
         model: Pydantic-модель для валидации содержимого.
+        icon: CSS-класс иконки.
         autocreate: Создать файл при инициализации, если его нет.
 
     """
 
     file_path: str | Path
     model: type[BaseModel]
+    icon: FAIcon = FAIcon.FAR_FILE_CODE
     autocreate: bool = False
 
     @property
