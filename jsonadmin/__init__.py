@@ -1,6 +1,7 @@
 """Публичный API библиотеки json-admin."""
 
-from jsonadmin.admin import Admin
-from jsonadmin.pages import BasePage, HtmlPage, JsonPage
+from .admin import Admin
+from .icons import FAIcon
+from .pages import BasePage, HtmlPage, JsonPage
 
-__all__ = ["Admin", "BasePage", "JsonPage", "HtmlPage"]
+__all__ = ["Admin", "BasePage", "JsonPage", "HtmlPage", "FAIcon"]
