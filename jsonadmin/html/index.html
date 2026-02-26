@@ -87,6 +87,23 @@
         });
         editor.setSize("100%", "520px");
 
+        const errorText =
+            document.querySelector(".msg-error")?.textContent?.trim() || "";
+        const match = errorText.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+        if (match) {
+            const line = Math.max(Number(match[1]) - 1, 0);
+            const col = Math.max(Number(match[2]) - 1, 0);
+
+            editor.addLineClass(line, "background", "cm-error-line");
+            editor.markText(
+                { line, ch: col },
+                { line, ch: col + 1 },
+                { className: "cm-error-token" },
+            );
+            editor.scrollIntoView({ line, ch: col }, 120);
+            editor.setCursor({ line, ch: col });
+        }
+
         const form = textarea.closest("form");
         if (form instanceof HTMLFormElement) {
             form.addEventListener("submit", () => {
