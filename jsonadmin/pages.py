@@ -30,11 +30,13 @@ class JsonPage(BasePage):
     Attributes:
         file_path: Путь до JSON-файла.
         model: Pydantic-модель для валидации содержимого.
+        autocreate: Создать файл при инициализации, если его нет.
 
     """
 
     file_path: str | Path
     model: type[BaseModel]
+    autocreate: bool = False
 
     @property
     def path(self) -> Path:

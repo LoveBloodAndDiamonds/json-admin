@@ -10,7 +10,7 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from litestar import Litestar, Request, Response, get, post
 from litestar.datastructures import Cookie
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from jsonadmin.pages import BasePage, HtmlPage, JsonPage
 
@@ -73,7 +73,36 @@ class Admin:
         """
         if page.slug in self._pages:
             raise ValueError(f"Page with slug='{page.slug}' is already registered")
+        if isinstance(page, JsonPage):
+            self._initialize_json_page_file(page)
         self._pages[page.slug] = page
+
+    def _initialize_json_page_file(self, page: JsonPage) -> None:
+        """Создает JSON-файл страницы при необходимости.
+
+        Args:
+            page: Конфигурация JSON-вкладки.
+
+        Raises:
+            ValueError: Если файл нужно создать, но модель нельзя собрать из дефолтов.
+
+        """
+        if page.path.exists() or not page.autocreate:
+            return
+
+        try:
+            defaults_payload = page.validate_payload({})
+        except ValidationError as exc:
+            raise ValueError(
+                f"Cannot create '{page.path}': model '{page.model.__name__}' "
+                "has required fields without defaults."
+            ) from exc
+
+        page.path.parent.mkdir(parents=True, exist_ok=True)
+        page.path.write_text(
+            json.dumps(defaults_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     def _register_routes(self) -> None:
         """Добавляет маршруты админки в Litestar-приложение."""
