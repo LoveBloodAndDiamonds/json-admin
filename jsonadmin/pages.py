@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -33,14 +33,18 @@ class JsonPage(BasePage):
         file_path: Путь до JSON-файла.
         model: Pydantic-модель для валидации содержимого.
         icon: CSS-класс иконки.
-        autocreate: Создать файл при инициализации, если его нет.
+        sync_mode: Режим синхронизации файла с моделью.
+            - "none": ничего не делать автоматически,
+            - "create": создать файл из модели, если его нет,
+            - "migrate": всегда прогонять содержимое через модель.
+        autocreate: Устаревший флаг, эквивалент `sync_mode="create"`.
 
     """
 
     file_path: str | Path
     model: type[BaseModel]
     icon: FAIcon = FAIcon.FAR_FILE_CODE
-    autocreate: bool = False
+    sync_mode: Literal["none", "create", "migrate"] = "none"
 
     @property
     def path(self) -> Path:

@@ -74,22 +74,41 @@ class Admin:
         if page.slug in self._pages:
             raise ValueError(f"Page with slug='{page.slug}' is already registered")
         if isinstance(page, JsonPage):
-            self._initialize_json_page_file(page)
+            self._synchronize_json_page_file(page)
         self._pages[page.slug] = page
 
-    def _initialize_json_page_file(self, page: JsonPage) -> None:
-        """Создает JSON-файл страницы при необходимости.
+    def _synchronize_json_page_file(self, page: JsonPage) -> None:
+        """Синхронизирует JSON-файл страницы с моделью.
 
         Args:
             page: Конфигурация JSON-вкладки.
 
         Raises:
-            ValueError: Если файл нужно создать, но модель нельзя собрать из дефолтов.
+            ValueError: Если файл нельзя создать/синхронизировать через модель.
 
         """
-        if page.path.exists() or not page.autocreate:
+        if page.sync_mode == "none":
             return
 
+        if page.sync_mode == "create":
+            if page.path.exists():
+                return
+            self._create_json_page_file_from_defaults(page)
+            return
+
+        if page.sync_mode == "migrate":
+            self._migrate_json_page_file(page)
+
+    def _create_json_page_file_from_defaults(self, page: JsonPage) -> None:
+        """Создает JSON-файл из дефолтов модели.
+
+        Args:
+            page: Конфигурация JSON-вкладки.
+
+        Raises:
+            ValueError: Если модель нельзя построить из дефолтных значений.
+
+        """
         try:
             defaults_payload = page.validate_payload({})
         except ValidationError as exc:
@@ -101,6 +120,37 @@ class Admin:
         page.path.parent.mkdir(parents=True, exist_ok=True)
         page.path.write_text(
             json.dumps(defaults_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    def _migrate_json_page_file(self, page: JsonPage) -> None:
+        """Синхронизирует существующий JSON или создает новый из дефолтов.
+
+        Args:
+            page: Конфигурация JSON-вкладки.
+
+        Raises:
+            ValueError: Если JSON некорректен или не проходит валидацию модели.
+
+        """
+        if not page.path.exists():
+            self._create_json_page_file_from_defaults(page)
+            return
+
+        try:
+            raw_payload = json.loads(page.path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Cannot migrate '{page.path}': invalid JSON: {exc}") from exc
+
+        try:
+            migrated_payload = page.validate_payload(raw_payload)
+        except ValidationError as exc:
+            raise ValueError(
+                f"Cannot migrate '{page.path}': model '{page.model.__name__}' validation failed."
+            ) from exc
+
+        page.path.write_text(
+            json.dumps(migrated_payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
