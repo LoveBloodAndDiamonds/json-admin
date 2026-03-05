@@ -221,11 +221,7 @@
                 const storageKey = "jsonadmin-theme";
                 const root = document.documentElement;
                 const savedTheme = localStorage.getItem(storageKey);
-                const systemDark = window.matchMedia(
-                    "(prefers-color-scheme: dark)",
-                ).matches;
-                const initialTheme =
-                    savedTheme || (systemDark ? "dark" : "light");
+                const initialTheme = savedTheme || "light";
                 root.setAttribute("data-theme", initialTheme);
 
                 document.addEventListener("click", (event) => {
