@@ -90,6 +90,54 @@ admin = Admin(
 - можно переопределить интерфейс через Jinja-шаблоны в `jsonadmin/html/` (по умолчанию) или через `templates_dir=...`.
 - для вкладок можно передать `icon` с классом Font Awesome, например `fa-solid fa-gear`.
 
+## Автообновляемый провайдер JSON-конфига
+
+Если в приложении нужен «живой» конфиг, можно использовать `JsonProvider` и `JsonProxy`:
+
+```python
+from pydantic import BaseModel, Field
+
+from jsonadmin import JsonProvider, JsonProxy, build_json_model_loader
+
+
+class AppSettings(BaseModel):
+    debug: bool = Field(default=False)
+    retries: int = Field(default=3, ge=0)
+
+
+settings_provider = JsonProvider(
+    loader=build_json_model_loader(
+        model=AppSettings,
+        file_path="data/app_settings.json",
+        create_if_missing=True,
+    ),
+    refresh_interval_sec=5,
+)
+settings: AppSettings = JsonProxy(settings_provider)  # type: ignore[assignment]
+
+# Использование:
+if settings.debug:
+    print(settings.retries)
+```
+
+`JsonProvider.value` вернет кэш и сам перечитает файл только при истекшем интервале.
+`JsonProxy` делает доступ к полям модели прозрачным (`settings.debug`, `settings.retries` и т.д.).
+
+Как с этим работать на практике:
+- создайте `loader` через `build_json_model_loader(...)`;
+- включите `create_if_missing=True`, если файл нужно создавать автоматически из дефолтов модели;
+- оберните `loader` в `JsonProvider` и задайте `refresh_interval_sec`;
+- используйте `JsonProxy`, чтобы читать поля как у обычной Pydantic-модели;
+- для немедленного обновления можно вызвать `settings_provider.reload()` или `settings.reload()`.
+
+Готовый runnable-пример есть в `examples/provider_demo.py`:
+
+```bash
+uv run python examples/provider_demo.py
+```
+
+Скрипт показывает сценарий «фонового» обновления: один таск читает прокси, другой изменяет JSON-файл.
+
 ## Пример интерфейса
 
 Ниже — короткий визуальный пример того, как выглядит админка:
